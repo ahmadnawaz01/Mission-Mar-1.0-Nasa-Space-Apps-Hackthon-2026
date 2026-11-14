@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import L from 'leaflet';
 import { useMap, useMapEvents } from 'react-leaflet';
 
 export function MapController({
@@ -8,9 +9,53 @@ export function MapController({
   setMouse,
   action,
   onMapClick,
-  routePoints
+  routePoints,
+  sidebarOpen,
+  selectedLayer
 }) {
   const map = useMap();
+
+  // Instantly purge stale tiles from previous layer when switching layers
+  useEffect(() => {
+    if (!selectedLayer) return;
+    map.eachLayer((layer) => {
+      if (layer instanceof L.TileLayer && layer._url !== selectedLayer.url) {
+        map.removeLayer(layer);
+      }
+    });
+  }, [selectedLayer?.id, selectedLayer?.url, map]);
+
+  // Observe map container dimensions so Leaflet canvas never has unrendered borders
+  useEffect(() => {
+    const container = map.getContainer();
+    if (!container) return;
+
+    let rafId;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        map.invalidateSize({ pan: false });
+      });
+    });
+
+    observer.observe(container);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      observer.disconnect();
+    };
+  }, [map]);
+
+  // Synchronize during and right after drawer width CSS transition (0.25s)
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => map.invalidateSize({ pan: false }), 40),
+      setTimeout(() => map.invalidateSize({ pan: false }), 120),
+      setTimeout(() => map.invalidateSize({ pan: false }), 260),
+      setTimeout(() => map.invalidateSize({ pan: false }), 320)
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [sidebarOpen, map]);
 
   useEffect(() => {
     if (target) {

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { PanelLeftClose, PanelLeftOpen, Crosshair } from 'lucide-react';
 import { places } from '../../constants/places';
+import { layers } from '../../constants/layers';
+import { NASA_TREK_ROOT } from '../../constants/api';
 import { coord, splitRoute, getVerdictStyle } from '../../utils/geo';
 import { landmarkIcon, routeIcon } from '../../utils/icons';
 import { MapController } from './MapController';
@@ -34,6 +36,32 @@ export function MapView({
 }) {
   const waypoints = route ? route.waypoints || route.coordinates || [] : [];
   const verdictMeta = route ? getVerdictStyle(route.verdict) : null;
+  const [tilesLoading, setTilesLoading] = useState(true);
+
+  // Eagerly pre-cache initial zoom 2 tiles into browser memory
+  useEffect(() => {
+    const initialTiles = [
+      `${NASA_TREK_ROOT}Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0/default/default028mm/2/1/1.jpg`,
+      `${NASA_TREK_ROOT}Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0/default/default028mm/2/1/2.jpg`,
+      `${NASA_TREK_ROOT}Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0/default/default028mm/2/1/3.jpg`,
+      `${NASA_TREK_ROOT}Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0/default/default028mm/2/2/1.jpg`,
+      `${NASA_TREK_ROOT}Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0/default/default028mm/2/2/2.jpg`,
+      `${NASA_TREK_ROOT}Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0/default/default028mm/2/2/3.jpg`
+    ];
+    initialTiles.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
+  // Smooth safety timer to ensure loading veil cleanly reveals the map
+  useEffect(() => {
+    setTilesLoading(true);
+    const timer = setTimeout(() => {
+      setTilesLoading(false);
+    }, 900);
+    return () => clearTimeout(timer);
+  }, [selectedLayer.id]);
 
   return (
     <main className={'map-area ' + (selecting ? 'selecting-map' : '')}>
@@ -49,6 +77,7 @@ export function MapView({
         maxBoundsViscosity={1.0}
         className="map"
       >
+        {/* Active Isolated Layer (clean swap with zero old layer ghosting) */}
         <TileLayer
           key={selectedLayer.id}
           url={selectedLayer.url}
@@ -57,6 +86,14 @@ export function MapView({
           maxNativeZoom={selectedLayer.maxNativeZoom || 7}
           maxZoom={14}
           bounds={selectedLayer.bounds || [[-90, -180], [90, 180]]}
+          keepBuffer={12}
+          updateInterval={50}
+          updateWhenZooming={true}
+          updateWhenIdle={false}
+          eventHandlers={{
+            loading: () => setTilesLoading(true),
+            load: () => setTilesLoading(false)
+          }}
         />
 
         {/* Landmark Exploration Markers */}
@@ -127,6 +164,8 @@ export function MapView({
           action={action}
           onMapClick={onMapClick}
           routePoints={waypoints}
+          sidebarOpen={sidebarOpen}
+          selectedLayer={selectedLayer}
         />
       </MapContainer>
 
@@ -160,6 +199,14 @@ export function MapView({
 
       {/* Map Zoom & Reset Controls */}
       <MapControls onCommand={onCommand} />
+
+      {/* Seamless Loading Veil so tiles reveal all at once */}
+      <div className={'map-loading-veil ' + (!tilesLoading ? 'veil-hidden' : '')}>
+        <div className="veil-inner">
+          <div className="veil-spinner" />
+          <span>SYNCHRONIZING SURFACE IMAGERY…</span>
+        </div>
+      </div>
 
       {/* Coordinates & Credit Bar */}
       <MapBottomBar mouse={mouse} position={position} zoom={zoom} />

@@ -15,7 +15,7 @@ export function App() {
   const [target, setTarget] = useState(null);
   const [action, setAction] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 600);
-  const [plannerOpen, setPlannerOpen] = useState(true);
+  const [plannerOpen, setPlannerOpen] = useState(false);
 
   // Route Planning State
   const [source, setSource] = useState(null);
