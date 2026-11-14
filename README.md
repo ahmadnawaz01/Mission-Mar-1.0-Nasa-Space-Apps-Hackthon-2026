@@ -18,13 +18,71 @@ Human extravehicular activities (EVAs) and robotic rover surface operations on M
 
 ## 2. NASA & USGS Orbital Datasets (WMTS)
 
-The frontend interfaces directly with official NASA Jet Propulsion Laboratory (JPL) Mars Trek Equirectangular Tile Services (`EPSG:4326`, $R_{\text{Mars}} = 3,389.5\text{ km}$):
+## 2. NASA Orbital Datasets Used for Map Image Fetching
 
-| Layer Name | Sensor / Instrument | Resolution | Native Zoom | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| **Optical Mosaic** | Viking Orbiter MDIM 2.1 | $232\text{ m/px}$ | $0\text{--}7$ | Global true-color photographic mosaic of the Martian surface. |
-| **Elevation Relief** | MGS Mars Orbiter Laser Altimeter (MOLA) | $463\text{ m/px}$ | $0\text{--}7$ | Color-shaded topography depicting elevation differences from $-8,200\text{ m}$ to $+21,240\text{ m}$. |
-| **Thermal Surface** | 2001 Mars Odyssey THEMIS Day IR | $100\text{ m/px}$ | $0\text{--}9$ | Controlled thermal infrared mosaic revealing surface thermal inertia and bedrock exposure ($65^\circ\text{S}$ to $65^\circ\text{N}$). |
+The frontend fetches planetary satellite imagery and topographic tiles in real-time from the official **NASA Jet Propulsion Laboratory (JPL) Mars Trek Web Map Tile Service (WMTS)**. All tiles are served in Equirectangular cylindrical projection (`EPSG:4326`, $R_{\text{Mars}} = 3,389.5\text{ km}$) using standard $256 \times 256$ pixel grids.
+
+### Summary Table
+
+| Layer Name | Source Mission & Sensor | Processing Agency | Ground Resolution | Native Zooms | File Format | Coverage |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Optical Mosaic** | NASA Viking 1 & 2 Orbiters (VIS) | USGS Astrogeology Science Center | **232 m / px** (64 px/deg) | Zoom 0–7 | JPEG | Global (90°S to 90°N) |
+| **Elevation Relief** | NASA MGS Mars Orbiter Laser Altimeter (MOLA) | NASA GSFC / USGS | **463 m / px** (128 px/deg) | Zoom 0–7 | JPEG | Global (90°S to 90°N) |
+| **Thermal Surface** | 2001 Mars Odyssey THEMIS Day IR | ASU Mars Space Flight Facility / USGS | **100 m / px** | Zoom 0–9 | PNG | Sub-polar (65°S to 65°N) |
+
+---
+
+### In-Depth Dataset Descriptions & WMTS Endpoints
+
+#### 1. NASA Viking Orbiter MDIM 2.1 (Optical True-Color Mosaic)
+* **Dataset Identifier**: `Mars_Viking_MDIM21_ClrMosaic_global_232m`
+* **Mission & Instrument**: NASA Viking Orbiters 1 & 2 — Visual Imaging Subsystem (VIS).
+* **Data Processing**: Compiled by the USGS Astrogeology Research Program, merging over 4,600 high-resolution camera frames with rigorous geodetic control network adjustments and photometric normalization.
+* **Ground Resolution**: $\approx 232\text{ meters per pixel}$ at the equator (1/256 degree per pixel).
+* **Spectral Characteristics**: Calibrated three-color composite (red, green, violet/clear) representing the true visible albedo of the Martian dust and rock surfaces.
+* **WMTS Tile URL Template**:
+  ```
+  https://trek.nasa.gov/tiles/Mars/EQ/Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg
+  ```
+* **Operational Role**: Primary optical reconnaissance, visual landmark confirmation, surface crater morphology, and regolith color discrimination.
+
+#### 2. NASA MGS MOLA Global Topographic Color Shaded Relief
+* **Dataset Identifier**: `Mars_MGS_MOLA_ClrShade_merge_global_463m`
+* **Mission & Instrument**: Mars Global Surveyor (MGS) — Mars Orbiter Laser Altimeter (MOLA MEGDR).
+* **Data Processing**: Developed by NASA Goddard Space Flight Center (GSFC) and USGS by interpolating over 600 million laser altimetry pulses tied to the Mars Areoid (Delta Geoid) gravity reference datum.
+* **Ground Resolution**: $\approx 463\text{ meters per pixel}$ (128 pixels per degree).
+* **Vertical Range**: $-8,200\text{ m}$ (depth of Hellas Impact Basin) to $+21,240\text{ m}$ (summit of Olympus Mons).
+* **Cartographic Visualization**: Multi-stop elevation colormap blended with synthetic northwest hillshading ($315^\circ$ azimuth, $45^\circ$ altitude):
+  * **Blue / Cyan**: Low-elevation impact basins and northern lowlands ($-8,200\text{ m}$ to $-3,000\text{ m}$).
+  * **Green / Yellow**: Intermediate highland plains and crater floors ($-3,000\text{ m}$ to $+1,000\text{ m}$).
+  * **Orange / Red / White**: High plateau volcanic provinces and summits ($+1,000\text{ m}$ to $+21,240\text{ m}$).
+* **WMTS Tile URL Template**:
+  ```
+  https://trek.nasa.gov/tiles/Mars/EQ/Mars_MGS_MOLA_ClrShade_merge_global_463m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg
+  ```
+* **Operational Role**: Topographic elevation assessment, immediate recognition of steep scarps, canyon wall drop-offs, and slope safety verification.
+
+#### 3. 2001 Mars Odyssey THEMIS Daytime Infrared Global Mosaic
+* **Dataset Identifier**: `THEMIS_DayIR_ControlledMosaics_100m_v2_oct2018`
+* **Mission & Instrument**: 2001 Mars Odyssey — Thermal Emission Imaging System (THEMIS).
+* **Data Processing**: Produced by the Mars Space Flight Facility at Arizona State University (ASU) in collaboration with USGS (v2 release, October 2018). Orthorectified and controlled using MOLA elevations and Viking MDIM 2.1 geometry.
+* **Ground Resolution**: $\approx 100\text{ meters per pixel}$ (highest-resolution global thermal map of Mars, serving up to zoom level 9).
+* **Coverage Limits**: Geometrically constrained between $65.0^\circ\text{S}$ and $65.0^\circ\text{N}$ latitude (due to seasonal polar frost interference in polar regions).
+* **Physical Measurement**: Daytime surface brightness temperature recorded at infrared wavelengths ($12.57\,\mu\text{m}$, Band 9).
+* **Thermal Inertia Interpretation**:
+  * **Dark / Low DN**: Fine unconsolidated dust deposits with low thermal inertia (cools down rapidly).
+  * **Bright / High DN**: Exposed consolidated bedrock, duricrust, and dense rocky scree with high thermal inertia (retains solar heat).
+* **WMTS Tile URL Template**:
+  ```
+  https://trek.nasa.gov/tiles/Mars/EQ/THEMIS_DayIR_ControlledMosaics_100m_v2_oct2018/1.0.0/default/default028mm/{z}/{y}/{x}.png
+  ```
+* **Operational Role**: Surface physical property diagnostics, regolith trafficability estimation, and sand dune vs. solid rock identification for rover wheels and astronaut spacesuit boots.
+
+---
+
+### Tile Caching & Offline Fallback Strategy
+* **Local Thumbnails (`/public`)**: High-resolution preview thumbnails for each layer are stored locally (`optical_thumb.jpg`, `elevation_thumb.jpg`, `themis_thumb.png`) to ensure instant sidebar rendering even on slow or offline connections.
+* **Up-Scaling on Deep Zooms**: The Leaflet map is configured with `maxNativeZoom` ($7$ for Optical/MOLA, $9$ for THEMIS) and `maxZoom: 12`. When zooming into localized exploration zones like Jezero Crater, Leaflet upscales native pixels cleanly without issuing out-of-range requests or throwing 404 tile errors.
 
 ---
 
