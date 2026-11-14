@@ -36,7 +36,6 @@ export function MapView({
 }) {
   const waypoints = route ? route.waypoints || route.coordinates || [] : [];
   const verdictMeta = route ? getVerdictStyle(route.verdict) : null;
-  const [tilesLoading, setTilesLoading] = useState(true);
 
   // Eagerly pre-cache initial zoom 2 tiles into browser memory
   useEffect(() => {
@@ -54,15 +53,6 @@ export function MapView({
     });
   }, []);
 
-  // Smooth safety timer to ensure loading veil cleanly reveals the map
-  useEffect(() => {
-    setTilesLoading(true);
-    const timer = setTimeout(() => {
-      setTilesLoading(false);
-    }, 900);
-    return () => clearTimeout(timer);
-  }, [selectedLayer.id]);
-
   return (
     <main className={'map-area ' + (selecting ? 'selecting-map' : '')}>
       <MapContainer
@@ -77,7 +67,7 @@ export function MapView({
         maxBoundsViscosity={1.0}
         className="map"
       >
-        {/* Active Isolated Layer (clean swap with zero old layer ghosting) */}
+        {/* Active Isolated Layer with smooth responsive tile rendering */}
         <TileLayer
           key={selectedLayer.id}
           url={selectedLayer.url}
@@ -86,14 +76,10 @@ export function MapView({
           maxNativeZoom={selectedLayer.maxNativeZoom || 7}
           maxZoom={14}
           bounds={selectedLayer.bounds || [[-90, -180], [90, 180]]}
-          keepBuffer={12}
-          updateInterval={50}
+          keepBuffer={8}
+          updateInterval={30}
           updateWhenZooming={true}
           updateWhenIdle={false}
-          eventHandlers={{
-            loading: () => setTilesLoading(true),
-            load: () => setTilesLoading(false)
-          }}
         />
 
         {/* Landmark Exploration Markers */}
@@ -199,14 +185,6 @@ export function MapView({
 
       {/* Map Zoom & Reset Controls */}
       <MapControls onCommand={onCommand} />
-
-      {/* Seamless Loading Veil so tiles reveal all at once */}
-      <div className={'map-loading-veil ' + (!tilesLoading ? 'veil-hidden' : '')}>
-        <div className="veil-inner">
-          <div className="veil-spinner" />
-          <span>SYNCHRONIZING SURFACE IMAGERY…</span>
-        </div>
-      </div>
 
       {/* Coordinates & Credit Bar */}
       <MapBottomBar mouse={mouse} position={position} zoom={zoom} />
