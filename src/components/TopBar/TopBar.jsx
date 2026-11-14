@@ -1,7 +1,12 @@
 import React from 'react';
-import { Navigation } from 'lucide-react';
+import { Navigation, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
-export function TopBar({ plannerOpen, onTogglePlanner }) {
+export function TopBar({
+  plannerOpen,
+  onTogglePlanner,
+  sidebarOpen,
+  onToggleSidebar
+}) {
   return (
     <header className="topbar">
       <div className="brand">
@@ -17,12 +22,24 @@ export function TopBar({ plannerOpen, onTogglePlanner }) {
       </div>
       <div className="top-right">
         <button
+          type="button"
+          className="mobile-drawer-toggle"
+          onClick={onToggleSidebar}
+          aria-expanded={sidebarOpen}
+          aria-label={sidebarOpen ? 'Hide drawer' : 'Open drawer'}
+          title={sidebarOpen ? 'Hide drawer' : 'Open drawer'}
+        >
+          {sidebarOpen ? <PanelLeftClose size={15} /> : <PanelLeftOpen size={15} />}
+        </button>
+
+        <button
+          type="button"
           className={'planner-toggle ' + (plannerOpen ? 'active' : '')}
           onClick={onTogglePlanner}
           aria-expanded={plannerOpen}
           aria-controls="path-planner"
         >
-          <Navigation size={14} /> <span>PLAN A PATH</span>
+          <Navigation size={13} /> <span>PLAN A PATH</span>
         </button>
         <span className="header-data">A PROJECT BY <b>CURIOUS MINDS</b></span>
       </div>

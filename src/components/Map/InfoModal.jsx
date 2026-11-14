@@ -1,6 +1,5 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { FASTAPI_URL } from '../../constants/api';
 
 export function InfoModal({ isOpen, onClose }) {
   if (!isOpen) return null;
@@ -12,8 +11,7 @@ export function InfoModal({ isOpen, onClose }) {
       </button>
       <strong>About Martian Map</strong>
       <p>
-        Dual-scale Martian pathfinding engine connected to FastAPI at{' '}
-        <code>{FASTAPI_URL}</code>. Supports Jezero Crater 20m high-resolution
+        Dual-scale Martian pathfinding engine connected to planetary routing services. Supports Jezero Crater 20m high-resolution
         DTM and planetary-scale MOLA elevation routing.
       </p>
       <a

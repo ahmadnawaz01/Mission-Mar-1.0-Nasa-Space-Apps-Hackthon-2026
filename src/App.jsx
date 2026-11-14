@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Navigation } from 'lucide-react';
 import { layers } from './constants/layers';
 import { calculateRoutePlan } from './services/api';
 import { TopBar } from './components/TopBar/TopBar';
@@ -14,7 +15,6 @@ export function App() {
   const [target, setTarget] = useState(null);
   const [action, setAction] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 600);
-  const [infoOpen, setInfoOpen] = useState(false);
   const [plannerOpen, setPlannerOpen] = useState(true);
 
   // Route Planning State
@@ -103,14 +103,25 @@ export function App() {
       <TopBar
         plannerOpen={plannerOpen}
         onTogglePlanner={handleTogglePlanner}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
 
       <div className="workspace">
+        {sidebarOpen && (
+          <div
+            className="sidebar-backdrop"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close drawer backdrop"
+          />
+        )}
+
         <Sidebar
           isOpen={sidebarOpen}
           selectedLayer={selectedLayer}
           onSelectLayer={setSelectedLayer}
           onSelectPlace={handleSelectPlace}
+          onClose={() => setSidebarOpen(false)}
         />
 
         <MapView
@@ -134,9 +145,19 @@ export function App() {
           selecting={selecting}
           onCancelSelecting={() => setSelecting(null)}
           onSetPresetPoint={handleSetPresetPoint}
-          infoOpen={infoOpen}
-          onToggleInfo={() => setInfoOpen(!infoOpen)}
         />
+
+        {!plannerOpen && (
+          <button
+            type="button"
+            className="planner-unhide-btn"
+            onClick={() => setPlannerOpen(true)}
+            title="Open route planner"
+            aria-label="Open route planner"
+          >
+            <Navigation size={14} />
+          </button>
+        )}
 
         {plannerOpen && (
           <PathPlanner
@@ -151,6 +172,7 @@ export function App() {
             calculating={calculating}
             route={route}
             routeError={routeError}
+            onClose={() => setPlannerOpen(false)}
           />
         )}
       </div>

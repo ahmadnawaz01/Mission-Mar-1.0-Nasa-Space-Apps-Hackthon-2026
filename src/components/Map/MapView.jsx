@@ -1,13 +1,12 @@
 import React from 'react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
-import { PanelLeftClose, PanelLeftOpen, Globe2, Info, Crosshair } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, Crosshair } from 'lucide-react';
 import { places } from '../../constants/places';
 import { coord, splitRoute, getVerdictStyle } from '../../utils/geo';
 import { landmarkIcon, routeIcon } from '../../utils/icons';
 import { MapController } from './MapController';
 import { SearchBar } from './SearchBar';
-import { InfoModal } from './InfoModal';
 import { MapControls } from './MapControls';
 import { MapBottomBar } from './MapBottomBar';
 
@@ -31,9 +30,7 @@ export function MapView({
   route,
   selecting,
   onCancelSelecting,
-  onSetPresetPoint,
-  infoOpen,
-  onToggleInfo
+  onSetPresetPoint
 }) {
   const waypoints = route ? route.waypoints || route.coordinates || [] : [];
   const verdictMeta = route ? getVerdictStyle(route.verdict) : null;
@@ -136,31 +133,17 @@ export function MapView({
       {/* Floating Top Controls: Sidebar Toggle, Search Bar, Projection Pill */}
       <div className="map-top">
         <button
+          type="button"
           className="icon-btn sidebar-toggle"
-          title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
+          title={sidebarOpen ? 'Hide drawer' : 'Show drawer'}
           onClick={onToggleSidebar}
+          aria-label={sidebarOpen ? 'Hide drawer' : 'Show drawer'}
         >
           {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
         </button>
 
         <SearchBar onSelectPlace={onSelectPlace} />
-
-        <div className="map-top-right">
-          <span className="projection">
-            <Globe2 size={14} /> EQUIRECTANGULAR <span>·</span> EPSG:4326
-          </span>
-          <button
-            className="icon-btn"
-            title="About this map"
-            onClick={onToggleInfo}
-          >
-            <Info size={17} />
-          </button>
-        </div>
       </div>
-
-      {/* Info Modal */}
-      <InfoModal isOpen={infoOpen} onClose={onToggleInfo} />
 
       {/* Selecting Target Prompt Notice */}
       {selecting && (
